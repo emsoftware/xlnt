@@ -1590,7 +1590,10 @@ std::string number_formatter::fill_placeholders(const format_placeholders &p, do
         number /= std::pow(1000.0, p.thousands_scale);
     }
 
-    auto integer_part = static_cast<long long>(number);
+    // Automatically round (away from zero), like Excel,
+    // when a fractional part won't be generated.
+    auto integer_part = (p.type == format_placeholders::placeholders_type::integer_only)
+        ? std::llround(number) : static_cast<long long>(number);
 
     if (p.type == format_placeholders::placeholders_type::integer_only
         || p.type == format_placeholders::placeholders_type::integer_part
