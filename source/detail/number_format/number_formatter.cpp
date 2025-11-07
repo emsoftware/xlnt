@@ -1602,30 +1602,25 @@ std::string number_formatter::fill_placeholders(const format_placeholders &p, do
         // Format with leading zeros (if necessary).
         result = fmt::format("{:0{}d}", integer_part, p.num_zeros);
 
-        if (result.size() < p.num_zeros + p.num_spaces)
-        {
-            // Add leading spaces.
-            result.insert(static_cast<size_t>(0), p.num_zeros + p.num_spaces - result.size(), ' ');
-        }
-
+        std::string::size_type num_places = p.num_zeros + p.num_spaces;
         if (p.use_comma_separator)
         {
-            std::vector<char> digits(result.rbegin(), result.rend());
-            std::string temp;
-
-            for (std::size_t i = 0; i < digits.size(); i++)
+            // Include the **expected** number of commas based on
+            // the format's placeholder count.
+            num_places += (num_places - 1) / 3;
+            // Inject commas at 3-digit intervals starting from
+            // the end (where the decimal point would be).
+            for (auto i = result.size(); i > 3; )
             {
-                temp.push_back(digits[i]);
-
-                if (i % 3 == 2)
-                {
-                    temp.push_back(',');
-                }
+                i -= 3;
+                result.insert(i, 1, ',');
             }
-
-            result = std::string(temp.rbegin(), temp.rend());
         }
-
+        // Pad result with leading spaces.
+        if (result.size() < num_places)
+        {
+            result.insert(static_cast<std::string::size_type> (0), num_places - result.size(), ' ');
+        }
         if (p.percentage && p.type == format_placeholders::placeholders_type::integer_only)
         {
             result.push_back('%');
@@ -1633,14 +1628,14 @@ std::string number_formatter::fill_placeholders(const format_placeholders &p, do
     }
     else if (p.type == format_placeholders::placeholders_type::fractional_part)
     {
-        auto fractional_part = number - integer_part;
+        double fractional_part = number - integer_part;
 
         // Format with zeros.
         result = fmt::format("{:.{}f}", fractional_part, p.num_zeros + p.num_optionals + p.num_spaces);
         result.erase(0, 1); // Remove 0 at the beginning so that we only have the decimal point and the rest
 
         // Remove unnecessary zeros outside of the maximum precision.
-        while (result.back() == '0' && result.size() > p.num_zeros + 1)
+        while (result.size() > p.num_zeros + 1 && result.back() == '0')
         {
             result.pop_back();
         }
@@ -2056,12 +2051,8 @@ std::string number_formatter::format_number(const format_code &format, double nu
 
     if (fill && result.size() < width)
     {
-        auto remaining = width - result.size();
-
-        std::string fill_string(remaining, fill_character.front());
         // TODO: A UTF-8 character could be multiple bytes
-
-        result = result.substr(0, fill_index) + fill_string + result.substr(fill_index);
+        result.insert(fill_index, width - result.size(), fill_character.front());
     }
 
     return result;
