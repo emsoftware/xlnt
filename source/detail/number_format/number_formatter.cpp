@@ -1582,6 +1582,12 @@ std::string number_formatter::fill_placeholders(const format_placeholders &p, do
 
     if (p.percentage)
     {
+        // TODO: Avoid multiplication here, since it can
+        // introduce error (due to the binary representation
+        // of doubles) that turns, say, .012345 into
+        // 1.23449999999 instead of 1.2345 which then, to
+        // 3 decimal digits, results in "1.234" instead of
+        // the correctly-rounded "1.235".
         number *= 100;
     }
 
