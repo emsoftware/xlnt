@@ -3493,6 +3493,19 @@ rich_text xlsx_consumer::read_rich_text(const xml::qname &parent)
                                 run.second.get().underline(font::underline_style::single);
                             }
                         }
+                        else if (current_run_property_element == xml::qname(xmlns, "vertAlign"))
+                        {
+                            auto vert_align(parser().attribute("val"));
+
+                            if (vert_align == "superscript")
+                            {
+                                run.second.get().superscript(true);
+                            }
+                            else if (vert_align == "subscript")
+                            {
+                                run.second.get().subscript(true);
+                            }
+                        }
                         else if (current_run_property_element == xml::qname(xmlns, "strike"))
                         {
                             run.second.get().strikethrough(parser().attribute_present("val")

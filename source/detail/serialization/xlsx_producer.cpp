@@ -905,47 +905,90 @@ void xlsx_producer::write_rich_text(const std::string &ns, const xlnt::rich_text
 
             if (run.second.is_set())
             {
+                const auto &f = run.second.get();
                 write_start_element(ns, "rPr");
 
-                if (run.second.get().bold())
+                if (f.bold())
                 {
                     write_start_element(ns, "b");
                     write_end_element(ns, "b");
                 }
 
-                if (run.second.get().has_size())
+                if (f.has_size())
                 {
                     write_start_element(ns, "sz");
-                    write_attribute<double>("val", run.second.get().size());
+                    write_attribute<double>("val", f.size());
                     write_end_element(ns, "sz");
                 }
 
-                if (run.second.get().has_color())
+                if (f.has_color())
                 {
                     write_start_element(ns, "color");
-                    write_color(run.second.get().color());
+                    write_color(f.color());
                     write_end_element(ns, "color");
                 }
 
-                if (run.second.get().has_name())
+                if (f.has_name())
                 {
                     write_start_element(ns, "rFont");
-                    write_attribute("val", run.second.get().name());
+                    write_attribute("val", f.name());
                     write_end_element(ns, "rFont");
                 }
 
-                if (run.second.get().has_family())
+                if (f.has_family())
                 {
                     write_start_element(ns, "family");
-                    write_attribute("val", run.second.get().family());
+                    write_attribute("val", f.family());
                     write_end_element(ns, "family");
                 }
 
-                if (run.second.get().has_scheme())
+                if (f.has_charset())
+                {
+                    write_start_element(ns, "charset");
+                    write_attribute("val", f.charset());
+                    write_end_element(ns, "charset");
+                }
+
+                if (f.has_scheme())
                 {
                     write_start_element(ns, "scheme");
-                    write_attribute("val", run.second.get().scheme());
+                    write_attribute("val", f.scheme());
                     write_end_element(ns, "scheme");
+                }
+
+                if (f.italic())
+                {
+                    write_start_element(ns, "i");
+                    write_end_element(ns, "i");
+                }
+
+                if (f.strikethrough())
+                {
+                    write_start_element(ns, "strike");
+                    write_end_element(ns, "strike");
+                }
+
+                if (f.underlined())
+                {
+                    write_start_element(ns, "u");
+                    if (f.underline() != font::underline_style::single)
+                    {
+                        write_attribute("val", f.underline());
+                    }
+                    write_end_element(ns, "u");
+                }
+
+                if (f.superscript())
+                {
+                    write_start_element(ns, "vertAlign");
+                    write_attribute("val", "superscript");
+                    write_end_element(ns, "vertAlign");
+                }
+                else if (f.subscript())
+                {
+                    write_start_element(ns, "vertAlign");
+                    write_attribute("val", "subscript");
+                    write_end_element(ns, "vertAlign");
                 }
 
                 write_end_element(ns, "rPr");
